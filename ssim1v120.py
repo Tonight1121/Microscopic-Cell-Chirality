@@ -63,7 +63,44 @@ step = 0.1
 traininng video IDs
 '''
 test_set_index = [15, 16, 17, 18, 32]
+video_fold = path.expanduser('~/Videos')
 
+def load_video_old(frames, frame_gap, video_id):
+    """
+    Load videos
+    :param frames: container for all frames
+    :param frame_gap: frame gap
+    :param video_id: video name (id)
+    :return: None
+    """
+
+    '''
+    CHANGE TO YOUR OWN VIDEO PATH
+    '''
+    tmp_frames = []
+    video_path = path.join(video_fold, 'XY{}_video.mp4'.format(video_id))
+    file_list = os.listdir(video_fold)
+    cap = cv2.VideoCapture(video_path)
+
+    count = 0
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if ret:
+            # cv2.imwrite('new_stuff/frame{}.jpg'.format(count), frame)
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            tmp_frames.append(gray)
+            # print(count)
+            count = count + 1
+        else:
+            break
+
+    cap.release()
+
+    for i in range(len(tmp_frames)):
+        if i % frame_gap == 0:
+            frames.append(tmp_frames[i])
+
+    print('VIDEO {} LOADED WITH FRAME COUNT -> {}'.format(video_id, frames.__len__()))
 
 def load_video(frames, frame_gap, video_id):
     """
@@ -78,20 +115,14 @@ def load_video(frames, frame_gap, video_id):
     CHANGE TO YOUR OWN VIDEO PATH
     '''
     tmp_frames = []
-    cap = cv2.VideoCapture('vids/XY{}_video.avi'.format(video_id))
-    count = 0
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if ret:
-            # cv2.imwrite('new_stuff/frame{}.jpg'.format(count), frame)
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            tmp_frames.append(gray)
-            # print(count)
-            count = count + 1
-        else:
-            break
+    video_path = path.join(video_fold, 'vid/XY{}_video'.format(video_id))
+    file_list = os.listdir(video_path)
+    file_list.sort()
 
-    cap.release()
+    for img_name in file_list:
+        img_path = path.join(video_path, img_name)
+        gray = cv2.imread(img_path, 0)
+        tmp_frames.append(gray)
 
     for i in range(len(tmp_frames)):
         if i % frame_gap == 0:
@@ -414,6 +445,7 @@ def ssim_test(frames, const_loc, vid_idx):
        print('ori_y\n{}'.format(ori_y.shape))
        print('y_new\n{}'.format(y_new.shape))
        print('y_new_deg4\n{}'.format(y_new_deg15.shape))
+       time.sleep(30)
 
 
        ori_y = np.reshape(ori_y, (1, ori_y.shape[0]))
@@ -573,7 +605,7 @@ if __name__ == '__main__':
     '''
 
     '''LOADING VIDEO'''
-    for video_id in range(13, 14):
+    for video_id in range(15, 16):
         print()
         print()
         print('==============STARTING VIDEO {}=============='.format(video_id))
