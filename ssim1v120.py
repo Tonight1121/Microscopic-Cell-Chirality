@@ -397,95 +397,96 @@ def ssim_test(frames, const_loc, vid_idx):
     nonrotation_color = (255, 0, 0)
     # os.makedirs('new_stuff/ssim_figs/{}'.format(vid_idx))
     for cell_idx in range(const_loc.shape[0]):
-       ssim_list = []
-       x, y, w, h = const_loc[cell_idx]
-       _, _, cell_lab = labs[cell_idx]
-       # os.makedirs('new_stuff/ssim_figs/{}/{}'.format(vid_idx, cell_idx))
-       for i in range(1, len(frames)):
-           frame_a = frames[0]
-           patch_a = frame_a[int(y - int(h / 2)):int(y + int(h / 2) + 1), int(x - int(w / 2)):int(x + int(w / 2) + 1)]
-           frame_b = frames[i]
-           patch_b = frame_b[int(y - int(h / 2)):int(y + int(h / 2) + 1),
+        ssim_list = []
+        x, y, w, h = const_loc[cell_idx]
+        _, _, cell_lab = labs[cell_idx]
+        # os.makedirs('new_stuff/ssim_figs/{}/{}'.format(vid_idx, cell_idx))
+        for i in range(1, len(frames)):
+            frame_a = frames[0]
+            patch_a = frame_a[int(y - int(h / 2)):int(y + int(h / 2) + 1), int(x - int(w / 2)):int(x + int(w / 2) + 1)]
+            frame_b = frames[i]
+            patch_b = frame_b[int(y - int(h / 2)):int(y + int(h / 2) + 1),
                      int(x - int(w / 2)):int(x + int(w / 2) + 1)]
-           blank_a = np.zeros_like(patch_a)
-           blank_a = cv2.circle(blank_a, (26, 26), 25, 255, cv2.FILLED)
-           blank_a[blank_a == 255] = patch_a[blank_a == 255]
-           blank_b = np.zeros_like(patch_b)
-           blank_b = cv2.circle(blank_b, (26, 26), 25, 255, cv2.FILLED)
-           blank_b[blank_b == 255] = patch_b[blank_b == 255]
-           ssim_const = ssim(blank_a, blank_b, data_range=blank_b.max() - blank_b.min())
-           # ssim_const = ssim(patch_a, patch_b, data_range=patch_b.max() - patch_b.min())
-           ssim_list.append(ssim_const)
-           cv2.imwrite('new_stuff/ssim_figs/{}/{}/b{}.jpg'.format(vid_idx, cell_idx, i), blank_b)
-           cv2.imwrite('new_stuff/ssim_figs/{}/{}/b{}.jpg'.format(vid_idx, cell_idx, 0), blank_a)
+            blank_a = np.zeros_like(patch_a)
+            blank_a = cv2.circle(blank_a, (26, 26), 25, 255, cv2.FILLED)
+            blank_a[blank_a == 255] = patch_a[blank_a == 255]
+            blank_b = np.zeros_like(patch_b)
+            blank_b = cv2.circle(blank_b, (26, 26), 25, 255, cv2.FILLED)
+            blank_b[blank_b == 255] = patch_b[blank_b == 255]
+            ssim_const = ssim(blank_a, blank_b, data_range=blank_b.max() - blank_b.min())
+            # ssim_const = ssim(patch_a, patch_b, data_range=patch_b.max() - patch_b.min())
+            ssim_list.append(ssim_const)
+            cv2.imwrite('new_stuff/ssim_figs/{}/{}/b{}.jpg'.format(vid_idx, cell_idx, i), blank_b)
+            cv2.imwrite('new_stuff/ssim_figs/{}/{}/b{}.jpg'.format(vid_idx, cell_idx, 0), blank_a)
 
-       ori_y = np.asarray(ssim_list)
-       # print('ori_y is {}'.format(ori_y))
-       ori_x = np.linspace(0, ori_y.shape[0] + 1, ori_y.shape[0])
-       # print('ori_x is {}'.format(ori_x))
+        ori_y = np.asarray(ssim_list)
+        # print('ori_y is {}'.format(ori_y))
+        ori_x = np.linspace(0, ori_y.shape[0] + 1, ori_y.shape[0])
+        # print('ori_x is {}'.format(ori_x))
 
-       p = np.polyfit(ori_x, ori_y, deg=1)
-       print('The linear slope of this cell is: {}'.format(p))
-       print('p array shape: {}'.format(p.shape))
+        p = np.polyfit(ori_x, ori_y, deg=1)
+        print('The linear slope of this cell is: {}'.format(p))
+        print('p array shape: {}'.format(p.shape))
 
-       p_high_degree = np.polyfit(ori_x, ori_y, deg=15)
+        p_high_degree = np.polyfit(ori_x, ori_y, deg=15)
 
-       # convert to polynomial function
-       f = np.poly1d(p)
-       f_deg15 = np.poly1d(p_high_degree)
+        # convert to polynomial function
+        f = np.poly1d(p)
+        f_deg15 = np.poly1d(p_high_degree)
 
-       # generate new x's and y's
-       x_new = np.linspace(0, 120, ori_y.shape[0])
-       x_new_deg15 = np.linspace(0, 120, ori_y.shape[0])
+        # generate new x's and y's
+        x_new = np.linspace(0, 120, ori_y.shape[0])
+        x_new_deg15 = np.linspace(0, 120, ori_y.shape[0])
 
-       y_new = f(x_new)
-       y_new_deg15 = f_deg15(x_new_deg15)
+        y_new = f(x_new)
+        y_new_deg15 = f_deg15(x_new_deg15)
 
-       evaluation = np.mean((y_new - ori_y) ** 2)
-       print('ori_y\n{}'.format(ori_y.shape))
-       print('y_new\n{}'.format(y_new.shape))
-       print('y_new_deg4\n{}'.format(y_new_deg15.shape))
-       time.sleep(30)
+        evaluation = np.mean((y_new - ori_y) ** 2)
+        print('ori_y\n{}'.format(ori_y.shape))
+        print('y_new\n{}'.format(y_new.shape))
+        print('y_new_deg4\n{}'.format(y_new_deg15.shape))
+        time.sleep(30)
 
 
-       ori_y = np.reshape(ori_y, (1, ori_y.shape[0]))
-       y_new = np.reshape(y_new, (1, y_new.shape[0]))
-       y_new_deg15 = np.reshape(y_new_deg15, (1, y_new_deg15.shape[0]))
+        ori_y = np.reshape(ori_y, (1, ori_y.shape[0]))
+        y_new = np.reshape(y_new, (1, y_new.shape[0]))
+        y_new_deg15 = np.reshape(y_new_deg15, (1, y_new_deg15.shape[0]))
 
-       # cv2.imwrite('frames/vid{}.jpg'.format(vid_idx), first_frame)
-       # print('First frame of vid{} is saved'.format(vid_idx))
+        # cv2.imwrite('frames/vid{}.jpg'.format(vid_idx), first_frame)
+        # print('First frame of vid{} is saved'.format(vid_idx))
 
-       print('Vid {}, cell {}/{} is {}'.format(vid_idx, cell_idx, const_loc.shape[0], cell_lab))
-       print('Cell location ({}, {})'.format(x, y))
-       print('cw_ori shape {}'.format(cw_orig.shape))
-       print('ori_y shape {}'.format(ori_y.shape))
-       print('**********')
+        print('Vid {}, cell {}/{} is {}'.format(vid_idx, cell_idx, const_loc.shape[0], cell_lab))
+        print('Cell location ({}, {})'.format(x, y))
+        print('cw_ori shape {}'.format(cw_orig.shape))
+        print('ori_y shape {}'.format(ori_y.shape))
+        print('**********')
 
-       slope = abs(p[0])
-       print('The linear slope is: {}'.format(slope))
-       sub1 = np.subtract(y_new_deg15, y_new)
-       sub2 = np.subtract(ori_y, y_new)
-       a = np.absolute(sub1)
-       b = np.absolute(sub2)
-       avgdifference = np.mean(a)
-       avgdifference2 = np.mean(b)
-       print('The average difference is: {}'.format(avgdifference))
-       print('The second average difference between red and blue is: {}'.format(avgdifference2))
-       if slope < .0005 and avgdifference < 0.05:
-           print('This is a nonmoving cell')
-           cv2.cvtColor(first_frame, cv2.COLOR_GRAY2RGB)
-           cv2.rectangle(first_frame, (int(x-w/2), int(y-h/2)), (int(x+w/2), int(y+h/2)), (255, 0, 0), 2)
-           cv2.putText(first_frame, '{}'.format(cell_idx),
+        slope = abs(p[0])
+        print('The linear slope is: {}'.format(slope))
+        sub1 = np.subtract(y_new_deg15, y_new)
+        sub2 = np.subtract(ori_y, y_new)
+        a = np.absolute(sub1)
+        b = np.absolute(sub2)
+        avgdifference = np.mean(a)
+        avgdifference2 = np.mean(b)
+        print('The average difference is: {}'.format(avgdifference))
+        print('The second average difference between red and blue is: {}'.format(avgdifference2))
+        if slope < .0005 and avgdifference < 0.05:
+            print('This is a nonmoving cell')
+            cv2.cvtColor(first_frame, cv2.COLOR_GRAY2RGB)
+            cv2.rectangle(first_frame, (int(x-w/2), int(y-h/2)), (int(x+w/2), int(y+h/2)), (255, 0, 0), 2)
+            cv2.putText(first_frame, '{}'.format(cell_idx),
                        (int(x-w/2), int(y-h/2)),
                        cv2.FONT_HERSHEY_COMPLEX,
                        1,
                        color=(255, 0, 0))
-           cv2.imwrite('frames/vid{}.jpg'.format(vid_idx), first_frame)
-           print('SAVED FOR CELL {}'.format(cell_idx))
-           # time.sleep(30)
-           # cv2.waitKey(0)
-       else:
+            cv2.imwrite('frames/vid{}.jpg'.format(vid_idx), first_frame)
+            print('SAVED FOR CELL {}'.format(cell_idx))
+            # time.sleep(30)
+            # cv2.waitKey(0)
+        else:
            print('This is a moving cell')
+
 
        # # *****************************************************
        # slope = abs(p[0])
