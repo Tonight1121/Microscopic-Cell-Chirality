@@ -394,13 +394,32 @@ def ssim_test(frames, const_loc, vid_idx):
     all_labs = []
     labs = np.loadtxt('const_index/lab/{}.txt'.format(vid_idx))
     first_frame = frames[0]
+
+    label_frame = frames[0]
+    label_frame = cv2.cvtColor(label_frame, cv2.COLOR_GRAY2RGB)
+    color_dic = [(0, 0, 255),
+                 (0, 255, 0),
+                 (255, 0, 0)]
+
     nonrotation_color = (255, 0, 0)
     # os.makedirs('new_stuff/ssim_figs/{}'.format(vid_idx))
     for cell_idx in range(const_loc.shape[0]):
         ssim_list = []
         x, y, w, h = const_loc[cell_idx]
         _, _, cell_lab = labs[cell_idx]
-        # os.makedirs('new_stuff/ssim_figs/{}/{}'.format(vid_idx, cell_idx))
+
+        this_color = color_dic[int(cell_lab)]
+        # print(this_color)
+        # time.sleep(1)
+        cv2.rectangle(label_frame, (int(x - w / 2), int(y - h / 2)), (int(x + w / 2), int(y + h / 2)),
+                      color=this_color, thickness=2)
+        cv2.putText(label_frame, '{}'.format(cell_idx),
+                    (int(x - w / 2), int(y - h / 2)),
+                    cv2.FONT_HERSHEY_COMPLEX,
+                    1,
+                    color=color_dic[int(cell_lab)])
+        cv2.imwrite('frames/label_vid{}.jpg'.format(vid_idx), label_frame)
+
         for i in range(1, len(frames)):
             frame_a = frames[0]
             patch_a = frame_a[int(y - int(h / 2)):int(y + int(h / 2) + 1), int(x - int(w / 2)):int(x + int(w / 2) + 1)]
@@ -426,7 +445,7 @@ def ssim_test(frames, const_loc, vid_idx):
 
         p = np.polyfit(ori_x, ori_y, deg=1)
         print('The linear slope of this cell is: {}'.format(p))
-        print('p array shape: {}'.format(p.shape))
+        # print('p array shape: {}'.format(p.shape))
 
         p_high_degree = np.polyfit(ori_x, ori_y, deg=15)
 
@@ -442,11 +461,9 @@ def ssim_test(frames, const_loc, vid_idx):
         y_new_deg15 = f_deg15(x_new_deg15)
 
         evaluation = np.mean((y_new - ori_y) ** 2)
-        print('ori_y\n{}'.format(ori_y.shape))
-        print('y_new\n{}'.format(y_new.shape))
-        print('y_new_deg4\n{}'.format(y_new_deg15.shape))
-        time.sleep(30)
-
+        # print('ori_y {}'.format(ori_y.shape))
+        # print('y_new {}'.format(y_new.shape))
+        # print('y_new_deg4 {}'.format(y_new_deg15.shape))
 
         ori_y = np.reshape(ori_y, (1, ori_y.shape[0]))
         y_new = np.reshape(y_new, (1, y_new.shape[0]))
@@ -456,10 +473,10 @@ def ssim_test(frames, const_loc, vid_idx):
         # print('First frame of vid{} is saved'.format(vid_idx))
 
         print('Vid {}, cell {}/{} is {}'.format(vid_idx, cell_idx, const_loc.shape[0], cell_lab))
-        print('Cell location ({}, {})'.format(x, y))
-        print('cw_ori shape {}'.format(cw_orig.shape))
-        print('ori_y shape {}'.format(ori_y.shape))
-        print('**********')
+        # print('Cell location ({}, {})'.format(x, y))
+        # print('cw_ori shape {}'.format(cw_orig.shape))
+        # print('ori_y shape {}'.format(ori_y.shape))
+        # print('**********')
 
         slope = abs(p[0])
         print('The linear slope is: {}'.format(slope))
@@ -471,7 +488,8 @@ def ssim_test(frames, const_loc, vid_idx):
         avgdifference2 = np.mean(b)
         print('The average difference is: {}'.format(avgdifference))
         print('The second average difference between red and blue is: {}'.format(avgdifference2))
-        if slope < .0005 and avgdifference < 0.05:
+        if (slope < .0015 and avgdifference < 0.01) or \
+                (slope < .001 and avgdifference < 0.015):
             print('This is a nonmoving cell')
             cv2.cvtColor(first_frame, cv2.COLOR_GRAY2RGB)
             cv2.rectangle(first_frame, (int(x-w/2), int(y-h/2)), (int(x+w/2), int(y+h/2)), (255, 0, 0), 2)
@@ -486,6 +504,7 @@ def ssim_test(frames, const_loc, vid_idx):
             # cv2.waitKey(0)
         else:
            print('This is a moving cell')
+        # time.sleep(1)
 
 
        # # *****************************************************
@@ -523,23 +542,23 @@ def ssim_test(frames, const_loc, vid_idx):
        # avgdifference = np.mean(a)
        # # *******************************************************
 
-       if cell_lab == 0:  # CW
+        if cell_lab == 0:  # CW
            cw_orig = np.concatenate((cw_orig, ori_y), axis=0)
            cw_deg1 = np.concatenate((cw_deg1, y_new), axis=0)
            cw_deg15 = np.concatenate((cw_deg15, y_new_deg15), axis=0)
-       elif cell_lab == 1: # CCW
+        elif cell_lab == 1: # CCW
            ccw_orig = np.concatenate((ccw_orig, ori_y), axis=0)
            ccw_deg1 = np.concatenate((ccw_deg1, y_new), axis=0)
            ccw_deg15 = np.concatenate((ccw_deg15, y_new_deg15), axis=0)
-       else:
+        else:
            complx_orig = np.concatenate((complx_orig, ori_y), axis=0)
            complx_deg1 = np.concatenate((complx_deg1, y_new), axis=0)
            complx_deg15 = np.concatenate((complx_deg15, y_new_deg15), axis=0)
-       print(cw_orig.shape, cw_deg1.shape, cw_deg15.shape)
-       print(ccw_orig.shape, ccw_deg1.shape, ccw_deg15.shape)
-       print(complx_orig.shape, complx_deg1.shape, complx_deg15.shape)
-       print('=' * 20)
-       time.sleep(.03)
+        # print(cw_orig.shape, cw_deg1.shape, cw_deg15.shape)
+        # print(ccw_orig.shape, ccw_deg1.shape, ccw_deg15.shape)
+        # print(complx_orig.shape, complx_deg1.shape, complx_deg15.shape)
+        print('=' * 50)
+        time.sleep(.03)
 
        # plt.ylim(0.0, 1.0)
        # plt.plot(ori_y, color='b', label='Original')
@@ -551,32 +570,6 @@ def ssim_test(frames, const_loc, vid_idx):
        # plt.savefig('new_stuff/ssim_figs/{}/{}/aplot{}.png'.format(vid_idx, cell_idx, cell_idx))
        # plt.clf()
        # time.sleep(30)
-
-       '''
-           0 is for CW and CCW
-           1 is for other
-       '''
-
-       # all_ssims.append(ssim_list)
-       # if labs[cell_idx][2] == 2:
-       #     lab = 1
-       # else:
-       #     lab = 0
-       # all_labs.append(lab)
-       # tmp = [p[0], p[1], evaluation]
-       # all_polys.append(tmp)
-
-    # all_ssims = np.asarray(all_ssims)
-    # all_labs = np.asarray(all_labs)
-    # all_polys = np.asarray(all_polys)
-    # print(all_ssims.shape, all_labs.shape)
-    # # np.savetxt('new_stuff/ssims/{}_vec.txt'.format(vid_idx), all_ssims)
-    # # np.savetxt('new_stuff/ssims/{}_lab.txt'.format(vid_idx), all_labs)
-    # np.savetxt('new_stuff/polys/{}_vec.txt'.format(vid_idx), all_polys)
-    # np.savetxt('new_stuff/polys/{}_lab.txt'.format(vid_idx), all_labs)
-    # print('finished video {}'.format(vid_idx))
-
-
 
     np.savetxt('vectors/cw/origin/{}.txt'.format(vid_idx), cw_orig)
     np.savetxt('vectors/cw/deg1/{}.txt'.format(vid_idx), cw_deg1)
@@ -592,15 +585,15 @@ def ssim_test(frames, const_loc, vid_idx):
 
 
 if __name__ == '__main__':
-    # cell_types = ['cw', 'ccw', 'complx']
-    # line_types = ['origin', 'deg1', 'deg15']
-    # for cell_type in cell_types:
-    #     for line_type in line_types:
-    #         # print('cell_type {}, line_type {}'.format(cell_type, line_type))
-    #         fold_path = 'vectors/{}/{}'.format(cell_type, line_type)
-    #         if os.path.isdir(fold_path) == False:
-    #             os.makedirs(fold_path)
-    #             print('{} does not exist, made one for you'.format(fold_path))
+    cell_types = ['cw', 'ccw', 'complx']
+    line_types = ['origin', 'deg1', 'deg15']
+    for cell_type in cell_types:
+        for line_type in line_types:
+            # print('cell_type {}, line_type {}'.format(cell_type, line_type))
+            fold_path = 'vectors/{}/{}'.format(cell_type, line_type)
+            if os.path.isdir(fold_path) == False:
+                os.makedirs(fold_path)
+                print('{} does not exist, made one for you'.format(fold_path))
     '''
     Load videos -> calculate the 1v120 lines/plots and gradient & quality data -> mannual identity or train a classifier
     '''
